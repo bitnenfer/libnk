@@ -1,0 +1,6 @@
+/out/
+/.vs/
+/.vscode/
+/shaders/d3d12/*.dll
+/shaders/d3d12/*.exe
+emsdk_path.txt

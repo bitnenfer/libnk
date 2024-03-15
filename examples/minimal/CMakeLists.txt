@@ -1,0 +1,8 @@
+project(minimal LANGUAGES CXX)
+if (WIN32)
+	add_executable(minimal WIN32 minimal.cpp)
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ENTRY:mainCRTStartup")
+else()
+	add_executable(minimal minimal.cpp)
+endif()
+target_link_libraries(minimal PRIVATE nk)

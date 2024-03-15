@@ -1,0 +1,8 @@
+project(draw_multiple_images LANGUAGES CXX)
+if (WIN32)
+	add_executable(draw_multiple_images WIN32 draw_multiple_images.cpp)
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ENTRY:mainCRTStartup")
+else()
+	add_executable(draw_multiple_images draw_multiple_images.cpp)
+endif()
+target_link_libraries(draw_multiple_images PRIVATE nk)

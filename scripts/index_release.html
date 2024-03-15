@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+    <script type="text/javascript">
+        window.addEventListener(`contextmenu`, (e) => {
+            e.preventDefault();
+        });
+        var Module = Module || { noInitialRun: true };
+        Module.onRuntimeInitialized = () => {
+            if (!("gpu" in navigator)) {
+                alert("WebGPU not supported on your browser");
+                return;
+            }
+            navigator.gpu.requestAdapter()
+                .then((adapter) => {
+                    WebGPU.mgrAdapter.create(adapter);
+                    adapter.requestDevice()
+                        .then((device) => {
+                            WebGPU.mgrDevice.create(device, { queueId: 1 });
+                            WebGPU.mgrQueue.create(device.queue);
+                            Module._main();
+                        })
+                        .catch((error) => {
+                            if (error !== 'unwind') {
+                                console.error('Failed to request WebGPU device.', error);
+                                alert("Failed to request WebGPU device.");
+                            }
+                        });
+                })
+                .catch((error) => {
+                    console.error('Failed to request WebGPU adapter.', error);
+                    alert("Failed to request WebGPU adapter.");
+                });
+        };
+    </script>
+
+    {{{ SCRIPT }}}
+</head>
+
+<body>
+</body>
+
+</html>

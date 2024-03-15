@@ -1,0 +1,8 @@
+project(draw_image LANGUAGES CXX)
+if (WIN32)
+	add_executable(draw_image WIN32 draw_image.cpp)
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ENTRY:mainCRTStartup")
+else()
+	add_executable(draw_image draw_image.cpp)
+endif()
+target_link_libraries(draw_image PRIVATE nk)
