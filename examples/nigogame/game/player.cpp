@@ -1,7 +1,7 @@
 #include "player.h"
-#include "../assets/nigo.h"
 #include "assets.h"
 #include "game.h"
+#include "nigo.h"
 
 void NcParticle::render(NcGame* game) {
     nk::canvas::drawRect(game->canvas, position.x, position.y, width, height,
