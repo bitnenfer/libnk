@@ -1,6 +1,8 @@
 NK
 ==
 
+![](https://bitnenfer.com/libnk/libnk-splash.jpg)
+
 **NK** is a simple **C++ 2D rendering library** with input and app control handling.
 
 The **NK** library was designed to be an efficient and easy to use solution for creating small 2D games, like for game jams. 
