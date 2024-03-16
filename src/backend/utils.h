@@ -42,7 +42,10 @@
         NK_DEBUG_BREAK();                                                      \
     }
 
-#ifdef NK_SUPERLUMINAL_ENABLED
+// NOTE(bitnenfer): To avoid linking issues with realeases of NK, Superluminal
+// API is disabled but it can be enabled manually when doing profiling of the
+// library.
+#if defined(NK_SUPERLUMINAL_ENABLED) && 0
 #include <Superluminal/PerformanceAPI.h>
 #define NK_PROFILER_COLOR(r, g, b) PERFORMANCEAPI_MAKE_COLOR(r, g, b)
 #define NK_PROFILER_BEGIN_EVENT(name)                                          \
