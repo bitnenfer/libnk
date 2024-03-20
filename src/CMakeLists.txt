@@ -17,13 +17,25 @@ if (WIN32)
     endif()
 
 elseif (EMSCRIPTEN)
-    add_library(nk STATIC
-    backend/wasm/wasm_app.cpp
-    backend/wasm/wasm_hid.cpp
-    backend/wasm/wasm_utils.cpp
-    backend/wasm/wasm_canvas_webgpu.cpp
-    backend/canvas_internal.cpp
-    backend/hid_internal.cpp
-    backend/texture_packer.cpp
-    )
+    if (USE_WEBGPU)
+        add_library(nk STATIC
+        backend/wasm/wasm_app.cpp
+        backend/wasm/wasm_hid.cpp
+        backend/wasm/wasm_utils.cpp
+        backend/wasm/wasm_canvas_webgpu.cpp
+        backend/canvas_internal.cpp
+        backend/hid_internal.cpp
+        backend/texture_packer.cpp
+        )
+    elseif(USE_WEBGL)
+        add_library(nk STATIC
+        backend/wasm/wasm_app.cpp
+        backend/wasm/wasm_hid.cpp
+        backend/wasm/wasm_utils.cpp
+        backend/wasm/wasm_canvas_webgl.cpp
+        backend/canvas_internal.cpp
+        backend/hid_internal.cpp
+        backend/texture_packer.cpp
+        )
+    endif()
 endif()

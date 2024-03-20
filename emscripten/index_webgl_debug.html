@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+    <script>
+        class FrameTime {
+            constructor() {
+                this.parent = document.body;
+                this.lastTime = performance.now();
+                this.lastFrameTime = 0.0;
+                this.frameCounter = 0;
+                this.accumulatedTime = 0.0;
+                this.framesPerSecond = 0.0;
+                this.container = document.createElement('div');
+                this.container.style.position = 'fixed';
+                this.container.style.top = '10px';
+                this.container.style.right = '10px';
+                this.container.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                this.container.style.color = 'white';
+                this.container.style.padding = '5px 10px';
+                this.container.style.borderRadius = '5px';
+                this.container.style.zIndex = 99999;
+                this.container.style.textAlign = 'right';
+                this.container.style.fontFamily = '"Lucida Console", Courier, monospace';
+                this.fpsContainer = document.createElement('div');
+                this.msContainer = document.createElement('div');
+                this.fpsContainer.textContent = '0 fps';
+                this.msContainer.textContent = '0 ms';
+                this.container.appendChild(this.msContainer);
+                this.container.appendChild(this.fpsContainer);
+                this.parent.appendChild(this.container);
+                this.updateContainer();
+            }
+
+            updateContainer() {
+                this.fpsContainer.textContent = `${this.framesPerSecond} fps`;
+                this.msContainer.textContent = `${this.lastFrameTime.toFixed(2)} ms`;
+                setTimeout(() => this.updateContainer(), 100);
+            }
+
+            tick() {
+                const time = performance.now();
+                this.lastFrameTime = time - this.lastTime;
+                this.lastTime = time;
+                this.accumulatedTime += this.lastFrameTime;
+                if (this.accumulatedTime >= 1000) {
+                    this.framesPerSecond = this.frameCounter;
+                    this.frameCounter = 0;
+                    this.accumulatedTime = 0;
+                }
+                this.frameCounter++;
+            }
+        }
+    </script>
+    <script type="text/javascript">
+        window.addEventListener(`contextmenu`, (e) => {
+            e.preventDefault();
+        });
+        window.addEventListener('load', (evt) => {
+            window.frameTime = new FrameTime();
+        })
+    </script>
+
+    {{{ SCRIPT }}}
+</head>
+
+<body>
+</body>
+
+</html>

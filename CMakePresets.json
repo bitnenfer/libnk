@@ -12,19 +12,39 @@
             }
         },
         {
-            "name": "web-wasm-debug",
-            "displayName": "Web (WebAssembly) - Debug",
+            "name": "web-wasm-webgpu-debug",
+            "displayName": "Web (WebAssembly) - WebGPU - Debug",
             "inherits": "web-wasm-base",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_BUILD_TYPE": "Debug",
+                "USE_WEBGPU": "ON"
             }
         },
         {
-            "name": "web-wasm-release",
-            "displayName": "Web (WebAssembly) - Release",
+            "name": "web-wasm-webgpu-release",
+            "displayName": "Web (WebAssembly) - WebGPU - Release",
             "inherits": "web-wasm-base",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_BUILD_TYPE": "Release",
+                "USE_WEBGPU": "ON"
+            }
+        },
+        {
+            "name": "web-wasm-webgl-debug",
+            "displayName": "Web (WebAssembly) - WebGL - Debug",
+            "inherits": "web-wasm-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "USE_WEBGL": "ON"
+            }
+        },
+        {
+            "name": "web-wasm-webgl-release",
+            "displayName": "Web (WebAssembly) - WebGL - Release",
+            "inherits": "web-wasm-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "USE_WEBGL": "ON"
             }
         },
         {
