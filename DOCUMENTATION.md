@@ -43,7 +43,13 @@ int main() {
 
 ```
 
-If your browser supports WebGPU you can test this two examples:
+You can test this two examples running in **WebGL**:
+- [NIGO (Small game)](https://bitnenfer.com/libnk/webgl/nigo/) - Source code [here](https://github.com/bitnenfer/libnk/tree/main/examples/nigogame).
+
+- [Draw image](https://bitnenfer.com/libnk/webgl/draw/) - Source code [here](https://github.com/bitnenfer/nk/tree/main/examples/draw_image).
+
+
+If your browser supports **WebGPU** you can test this two examples:
 
 - [NIGO (Small game)](https://bitnenfer.com/libnk/nigo/) - Source code [here](https://github.com/bitnenfer/libnk/tree/main/examples/nigogame).
 
