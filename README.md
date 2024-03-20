@@ -26,6 +26,7 @@ You can read on how to create a small game using **NK** and also how to setup th
 #### Supported Platforms
 - Windows with DirectX 12.
 - Web with WebAssembly & WebGPU.
+- Web with WebAssembly & WebGL.
 
 ---
 ###### Developed by [Felipe Alfonso](https://bitnenfer.com/)
