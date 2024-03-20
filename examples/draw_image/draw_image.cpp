@@ -7,6 +7,10 @@
 
 #include "image.h"
 
+#if __EMSCRIPTEN__
+#include <emscripten/html5.h>
+#endif
+
 struct Sprite {
     float x;
     float y;
@@ -38,41 +42,66 @@ int main() {
             rand() % RAND_MAX, rand() % RAND_MAX, rand() % RAND_MAX);
     }
 
+#if __EMSCRIPTEN__
+    struct AppData {
+        NkApp* app;
+        NkCanvas* canvas;
+        NkHID* hid;
+        NkImage* image;
+        float& rotation;
+    };
+    AppData appData = {app, canvas, hid, image, rotation};
+    emscripten_set_main_loop_arg(
+        [](void* userData) {
+            AppData* appData = (AppData*)userData;
+            NkApp* app = appData->app;
+            NkCanvas* canvas = appData->canvas;
+            NkHID* hid = appData->hid;
+            NkImage* image = appData->image;
+            float& rotation = appData->rotation;
+#else
     while (!nk::app::shouldQuit(app)) {
-        nk::app::update(app);
+#endif
+            nk::app::update(app);
 
-        if (nk::hid::keyClick(hid, NkKeyCode::ESC)) {
-            nk::app::quit(app);
-        }
+            if (nk::hid::keyClick(hid, NkKeyCode::ESC)) {
+                nk::app::quit(app);
+            }
 
-        nk::canvas::beginFrame(canvas);
+            nk::canvas::beginFrame(canvas);
 
-        for (uint32_t index = 0; index < SPRITE_COUNT; ++index) {
-            Sprite& sprite = sprites[index];
+            for (uint32_t index = 0; index < SPRITE_COUNT; ++index) {
+                Sprite& sprite = sprites[index];
+                nk::canvas::pushMatrix(canvas);
+                nk::canvas::translate(canvas, sprite.x, sprite.y);
+                nk::canvas::rotate(canvas, sprite.rotation);
+                nk::canvas::drawImage(canvas, -nk::img::width(image) * 0.5f,
+                                      -nk::img::height(image) * 0.5f,
+                                      sprite.color, image);
+                nk::canvas::popMatrix(canvas);
+                sprite.rotation -= 1.0f / 60.0f;
+            }
+
             nk::canvas::pushMatrix(canvas);
-            nk::canvas::translate(canvas, sprite.x, sprite.y);
-            nk::canvas::rotate(canvas, sprite.rotation);
+            nk::canvas::translate(canvas, nk::hid::mouseX(hid),
+                                  nk::hid::mouseY(hid));
+            nk::canvas::rotate(canvas, rotation);
+
             nk::canvas::drawImage(canvas, -nk::img::width(image) * 0.5f,
-                                  -nk::img::height(image) * 0.5f, sprite.color,
-                                  image);
+                                  -nk::img::height(image) * 0.5f, image);
+
             nk::canvas::popMatrix(canvas);
-            sprite.rotation -= 1.0f / 60.0f;
-        }
+            nk::canvas::endFrame(canvas);
+            nk::canvas::present(canvas);
 
-        nk::canvas::pushMatrix(canvas);
-        nk::canvas::translate(canvas, nk::hid::mouseX(hid),
-                              nk::hid::mouseY(hid));
-        nk::canvas::rotate(canvas, rotation);
+            rotation += 1.0f / 60.0f;
 
-        nk::canvas::drawImage(canvas, -nk::img::width(image) * 0.5f,
-                              -nk::img::height(image) * 0.5f, image);
-
-        nk::canvas::popMatrix(canvas);
-        nk::canvas::endFrame(canvas);
-        nk::canvas::present(canvas);
-
-        rotation += 1.0f / 60.0f;
+#if __EMSCRIPTEN__
+        },
+        &appData, 0, 1);
+#else
     }
+#endif
 
     nk::canvas::destroyImage(canvas, image);
     nk::app::destroy(app);

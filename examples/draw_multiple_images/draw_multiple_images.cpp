@@ -112,7 +112,7 @@ int main() {
 
 #if __EMSCRIPTEN__
         },
-        &appData, 60, 1);
+        &appData, 0, 1);
 #else
     }
 #endif

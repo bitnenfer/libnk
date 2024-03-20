@@ -138,7 +138,7 @@ void NcGame::update() {
 void NcGame::run() {
 #if __EMSCRIPTEN__
     emscripten_set_main_loop_arg(
-        [](void* userData) { ((NcGame*)userData)->update(); }, this, 60, 1);
+        [](void* userData) { ((NcGame*)userData)->update(); }, this, 0, 1);
 #else
     while (!nk::app::shouldQuit(app)) {
         update();
