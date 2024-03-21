@@ -20,11 +20,7 @@
 #define NK_CANVAS_INDEX_SIZE (sizeof(NK_CANVAS_INDEX_TYPE))
 #define NK_CANVAS_MAX_INDICES_BYTE_SIZE                                        \
     (NK_CANVAS_MAX_INDICES * NK_CANVAS_INDEX_SIZE)
-#ifdef NK_RENDERING_WEBGL
-#define NK_CANVAS_MAX_BATCHES (1 << 16)
-#else
-#define NK_CANVAS_MAX_BATCHES (1 << 12)
-#endif
+#define NK_CANVAS_MAX_BATCHES            (1 << 12)
 #define NK_CANVAS_MAX_MATRIX_STACK_DEPTH (1 << 10)
 #define NK_CANVAS_MAX_FRAMES             2
 #define NK_CANVAS_WHITE_IMAGE_WIDTH      2

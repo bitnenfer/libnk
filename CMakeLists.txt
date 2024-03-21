@@ -22,17 +22,10 @@ if (WIN32)
         -DNK_PLATFORM_WINDOWS
     )
 elseif(USE_EMSCRIPTEN)
-    if (USE_WEBGPU)
-      add_definitions(
-          -DNK_CANVAS_TEXTURE_ATLAS_ENABLED
-          -DNK_PLATFORM_WEB
-      )
-    elseif(USE_WEBGL)
-      add_definitions(
+    add_definitions(
+        -DNK_CANVAS_TEXTURE_ATLAS_ENABLED
         -DNK_PLATFORM_WEB
-        -DNK_RENDERING_WEBGL
-      )
-    endif()
+    )
 endif()
 
 

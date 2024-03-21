@@ -28,6 +28,46 @@ void main() {
 }
 )";
 
+#if NK_CANVAS_TEXTURE_ATLAS_ENABLED
+static const char* textureAtlasVertexShader = R"(
+precision mediump float;
+uniform vec2 resolution;
+uniform vec4 rect;
+attribute float vertId;
+varying vec2 fragTexCoord;
+void main() {
+    vec4 position = vec4(0);
+    vec2 texCoord = vec2(0);
+    if (vertId == 0.0) {
+        position = vec4(rect.xy, 0.0, 1.0);
+        texCoord = vec2(0.0, 0.0);
+    } else if (vertId == 1.0) {
+        position = vec4(rect.x, (rect.y + rect.w), 0.0, 1.0);
+        texCoord = vec2(0.0, 1.0);
+    } else if (vertId == 2.0) {
+        position = vec4((rect.x + rect.z), (rect.y + rect.w), 0.0, 1.0);
+        texCoord = vec2(1.0, 1.0);
+    } else if (vertId == 3.0) {
+        position = vec4((rect.x + rect.z), rect.y, 0.0, 1.0);
+        texCoord = vec2(1.0, 0.0);
+    }
+    position.xy = (position.xy / resolution) * 2.0 - 1.0;
+    gl_Position = position;
+    fragTexCoord = texCoord;
+}
+)";
+
+static const char* textureAtlasFragmentShader = R"(
+precision mediump float;
+uniform sampler2D texture;
+varying vec2 fragTexCoord;
+void main() {
+    gl_FragColor = texture2D(texture, fragTexCoord);
+}
+
+)";
+#endif
+
 static NkWebGLInstance webGLinstance{};
 
 static GLuint compileGLShader(GLenum type, const char* shaderCode) {
@@ -124,6 +164,22 @@ NkCanvas* nk::canvas::create(NkApp* app, bool allowResize) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_SCISSOR_TEST);
+
+#if NK_CANVAS_TEXTURE_ATLAS_ENABLED
+    canvas->textureAtlasVertShader =
+        compileGLShader(GL_VERTEX_SHADER, textureAtlasVertexShader);
+    canvas->textureAtlasFragShader =
+        compileGLShader(GL_FRAGMENT_SHADER, textureAtlasFragmentShader);
+    canvas->textureAtlasProgram = compileGLProgram(
+        canvas->textureAtlasVertShader, canvas->textureAtlasFragShader);
+    glGenBuffers(1, &canvas->textureAtlasVB);
+    float textureAtlasVerts[] = {0.0f, 1.0f, 2.0f, 0.0f, 2.0f, 3.0f};
+    glBindBuffer(GL_ARRAY_BUFFER, canvas->textureAtlasVB);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(textureAtlasVerts), textureAtlasVerts,
+                 GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+#endif
+
     return canvas;
 }
 bool nk::canvas::destroy(NkCanvas* canvas) {
@@ -287,6 +343,10 @@ NkImage* nk::canvas::createImage(NkCanvas* canvas, uint32_t width,
 bool nk::canvas::destroyImage(NkCanvas* canvas, NkImage* image) {
     if (image) {
         glDeleteTextures(1, &image->texture);
+        if (image->framebuffer) {
+            glDeleteFramebuffers(1, &image->framebuffer);
+            glDeleteRenderbuffers(1, &image->renderbuffer);
+        }
         return true;
     }
     return false;
@@ -343,6 +403,10 @@ void nk::webgl::drawFrame(NkCanvas* canvas, uint64_t currentFrameIndex) {
         viewHeight = canvas->renderTarget->height;
     }
 
+#if NK_CANVAS_TEXTURE_ATLAS_ENABLED
+    nk::webgl::updateTextureAtlas(canvas, canvas->base.frameTextureAtlas);
+#endif
+
     GLuint mainTextureLocation =
         glGetUniformLocation(canvas->spriteProgram, "mainTexture");
     GLuint resolutionLocation =
@@ -369,6 +433,13 @@ void nk::webgl::drawFrame(NkCanvas* canvas, uint64_t currentFrameIndex) {
     GLuint indexBuffer = (GLuint)canvas->base.gpuIndexBuffer;
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
 
+#if NK_CANVAS_TEXTURE_ATLAS_ENABLED
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(
+        GL_TEXTURE_2D,
+        ((NkImage*)canvas->base.frameTextureAtlas.gpuTexture)->texture);
+#endif
+
     GLuint indexOffset = 0;
     NkCanvasDrawBatchInternalArray& drawBatchArray =
         canvas->base.drawBatchArray[currentFrameIndex];
@@ -393,11 +464,75 @@ void nk::webgl::drawFrame(NkCanvas* canvas, uint64_t currentFrameIndex) {
         glVertexAttribPointer(vertColorLocation, 4, GL_UNSIGNED_BYTE, true,
                               sizeof(NkCanvasVertex),
                               (void*)offsetof(NkCanvasVertex, color));
+#if !NK_CANVAS_TEXTURE_ATLAS_ENABLED
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, drawBatch.image->texture);
+#endif
         glDrawElements(GL_TRIANGLES, drawBatch.count, GL_UNSIGNED_INT,
                        reinterpret_cast<void*>(indexOffset * sizeof(GLuint)));
 
         indexOffset += drawBatch.count;
     }
 }
+
+#if NK_CANVAS_TEXTURE_ATLAS_ENABLED
+void nk::canvas_internal::initTextureAtlasResource(
+    NkCanvas* canvas, NkTextureAtlas& textureAtlas) {
+    textureAtlas.gpuTexture = (void*)nk::canvas::createRenderTargetImage(
+        canvas, textureAtlas.width, textureAtlas.height);
+}
+void nk::canvas_internal::destroyTextureAtlasResource(
+    NkTextureAtlas& textureAtlas) {
+    NkImage* image = (NkImage*)textureAtlas.gpuTexture;
+    glDeleteTextures(1, &image->texture);
+    glDeleteFramebuffers(1, &image->framebuffer);
+    glDeleteRenderbuffers(1, &image->renderbuffer);
+    textureAtlas.gpuTexture = nullptr;
+}
+void nk::canvas_internal::setTextureAtlasState(NkImage* image,
+                                               const NkTextureAtlasRect& rect) {
+    image->state |= NK_IMAGE_BIT_TEXTURE_ATLAS;
+    image->rect = rect;
+}
+
+bool nk::canvas_internal::isImageInTextureAtlas(NkImage* image) {
+    return (image->state & NK_IMAGE_BIT_TEXTURE_ATLAS) > 0;
+}
+
+const NkTextureAtlasRect& nk::canvas_internal::textureRect(NkImage* image) {
+    return image->rect;
+}
+
+void nk::webgl::updateTextureAtlas(NkCanvas* canvas,
+                                   NkTextureAtlas& textureAtlas) {
+    NkImage* textureAtlasImage = (NkImage*)textureAtlas.gpuTexture;
+    glViewport(0, 0, (GLsizei)textureAtlas.width, (GLsizei)textureAtlas.height);
+    glScissor(0, 0, (GLsizei)textureAtlas.width, (GLsizei)textureAtlas.height);
+    glBindFramebuffer(GL_FRAMEBUFFER, textureAtlasImage->framebuffer);
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glUseProgram(canvas->textureAtlasProgram);
+    glBindBuffer(GL_ARRAY_BUFFER, canvas->textureAtlasVB);
+    GLuint resolutionLocation =
+        glGetUniformLocation(canvas->textureAtlasProgram, "resolution");
+    GLuint rectLocation =
+        glGetUniformLocation(canvas->textureAtlasProgram, "rect");
+    GLuint vertIdLocation =
+        glGetAttribLocation(canvas->textureAtlasProgram, "vertId");
+
+    glUniform2f(resolutionLocation, (float)textureAtlas.width,
+                (float)textureAtlas.height);
+    glEnableVertexAttribArray(vertIdLocation);
+    glVertexAttribPointer(vertIdLocation, 1, GL_FLOAT, false, sizeof(float),
+                          nullptr);
+    for (auto& entry : textureAtlas.images) {
+        NkImage* image = entry.first;
+        NkTextureAtlasRect& rect = entry.second;
+        glUniform4f(rectLocation, rect.x, rect.y, rect.width, rect.height);
+        glBindTexture(GL_TEXTURE_2D, image->texture);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        image->state &= ~NK_IMAGE_BIT_TEXTURE_ATLAS;
+    }
+}
+
+#endif
