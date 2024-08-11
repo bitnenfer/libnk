@@ -33,7 +33,8 @@ int main() {
         nk::canvas::drawRect(canvas, -50.0f, -50.0f, 100.0f, 100.0f, NK_COLOR_RGB_UINT(0xff, 0xff, 0x00));
         nk::canvas::popMatrix(canvas);
         nk::canvas::endFrame(canvas);
-        
+        nk::canvas::present(canvas);
+
         rotation += 1.0f / 60.0f;
     }
 
